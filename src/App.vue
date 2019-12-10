@@ -1,5 +1,5 @@
 <template>
-  <div id="app">
+  <div id="app" class="master">
     <Map />
   </div>
 </template>
@@ -16,12 +16,11 @@ export default {
 </script>
 
 <style>
-#app {
-  font-family: 'Avenir', Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-  margin-top: 60px;
+body {
+  margin: 0;
+}
+
+.master {
+  min-height: 100vh;
 }
 </style>
