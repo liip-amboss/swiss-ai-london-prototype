@@ -3,46 +3,53 @@
     :accessToken="accessToken"
     :mapStyle="mapStyle"
     @load="onMapLoad"
-    :center="[8.5155, 47.1662]"
+    :center="[-0.1, 51.5]"
     :zoom="9"
   >
     <MglMarker
-      v-for="(stop, index) in stops"
+      v-for="(stop, i) in stops"
       :coordinates="stop.location"
       color="blue"
-      :key="stop.name + index"
-    />
+      :key="i"
+    >
+      <MglPopup>
+        <div class="mapbox-popup">
+          <strong>{{ stop.name }}</strong>
+        </div>
+      </MglPopup>
+    </MglMarker>
   </MglMap>
 </template>
 
 <script>
-import Mapbox from 'mapbox-gl';
-import { MglMap, MglMarker } from 'vue-mapbox';
+import Mapbox from "mapbox-gl";
+import { MglMap, MglPopup, MglMarker } from "vue-mapbox";
 
-import PapaParse from 'papaparse';
-import axios from 'axios';
-import OSPoint from 'ospoint';
-import groupBy from 'lodash/groupBy';
-import qs from 'query-string';
+import PapaParse from "papaparse";
+import axios from "axios";
+import OSPoint from "ospoint";
+import groupBy from "lodash/groupBy";
+import qs from "query-string";
 
 const colors = {
-  '1': '#ff7e5f',
-  '2': '#30bf60',
-  '3': '#346fed',
-  '4': '#e02636',
-  '5': '#66faff'
+  "1": "#ff7e5f",
+  "2": "#30bf60",
+  "3": "#346fed",
+  "4": "#e02636",
+  "5": "#66faff"
 };
 
 export default {
   components: {
     MglMap,
+    MglPopup,
     MglMarker
   },
   data() {
     return {
       accessToken:
-        'pk.eyJ1Ijoiam9uYXNuaWVzdHJvaiIsImEiOiJjazN6bmt3dHowandwM21wMzcwc21vdjdxIn0.P496caPNw9SXrMl_GbzHdw', // your access token. Needed if you using Mapbox maps
-      mapStyle: 'mapbox://styles/mapbox/streets-v11', // your map style
+        "pk.eyJ1Ijoiam9uYXNuaWVzdHJvaiIsImEiOiJjazN6bmt3dHowandwM21wMzcwc21vdjdxIn0.P496caPNw9SXrMl_GbzHdw", // your access token. Needed if you using Mapbox maps
+      mapStyle: "mapbox://styles/mapbox/streets-v11", // your map style
       stops: []
     };
   },
@@ -62,18 +69,18 @@ export default {
         speed: 0.7
       });
 
-      axios.get('stop-sequences-example.csv').then(response => {
+      axios.get("stop-sequences-example.csv").then(response => {
         const stops = PapaParse.parse(response.data, { header: true });
 
         const groupedStops = groupBy(stops.data, stop => stop.Route);
 
         Object.keys(groupedStops).forEach(stopGroupKey => {
           const stopGroup = groupedStops[stopGroupKey];
-          const filteredStops = stopGroup.filter(stop => stop.Run === '1');
+          const filteredStops = stopGroup.filter(stop => stop.Run === "1");
 
           const config = {
             headers: {
-              'Content-Type': 'application/x-www-form-urlencoded'
+              "Content-Type": "application/x-www-form-urlencoded"
             }
           };
 
@@ -83,20 +90,25 @@ export default {
           let index = 0;
 
           filteredStops.forEach(stop => {
-            const point = new OSPoint(stop.Location_Northing, stop.Location_Easting);
+            const point = new OSPoint(
+              stop.Location_Northing,
+              stop.Location_Easting
+            );
             const latLong = point.toWGS84();
             if (!isNaN(latLong.longitude) && !isNaN(latLong.latitude)) {
               if (!coordinatesArray[index]) {
-                coordinatesArray[index] = '';
+                coordinatesArray[index] = "";
               }
-              coordinatesArray[index] += latLong.longitude + ',' + latLong.latitude + ';';
+              coordinatesArray[index] +=
+                latLong.longitude + "," + latLong.latitude + ";";
               count++;
               if (count % 20 === 0 && count !== filteredStops.length) {
                 index++;
                 if (!coordinatesArray[index]) {
-                  coordinatesArray[index] = '';
+                  coordinatesArray[index] = "";
                 }
-                coordinatesArray[index] += latLong.longitude + ',' + latLong.latitude + ';';
+                coordinatesArray[index] +=
+                  latLong.longitude + "," + latLong.latitude + ";";
               }
             }
           });
@@ -105,13 +117,13 @@ export default {
 
           coordinatesArray.forEach(coordinates => {
             const requestBody = {
-              geometries: 'geojson',
+              geometries: "geojson",
               coordinates: coordinates.substring(0, coordinates.length - 1)
             };
 
             promises.push(
               axios.post(
-                'https://api.mapbox.com/directions/v5/mapbox/driving?access_token=pk.eyJ1Ijoiam9uYXNuaWVzdHJvaiIsImEiOiJjazN6bmt3dHowandwM21wMzcwc21vdjdxIn0.P496caPNw9SXrMl_GbzHdw',
+                "https://api.mapbox.com/directions/v5/mapbox/driving?access_token=pk.eyJ1Ijoiam9uYXNuaWVzdHJvaiIsImEiOiJjazN6bmt3dHowandwM21wMzcwc21vdjdxIn0.P496caPNw9SXrMl_GbzHdw",
                 qs.stringify(requestBody),
                 config
               )
@@ -124,44 +136,53 @@ export default {
               coordinates.push(...response.data.routes[0].geometry.coordinates);
             });
             event.map.addLayer({
-              id: 'route-' + stopGroupKey,
-              type: 'line',
+              id: "route-" + stopGroupKey,
+              type: "line",
               source: {
-                type: 'geojson',
+                type: "geojson",
                 data: {
-                  type: 'Feature',
+                  type: "Feature",
                   properties: {},
                   geometry: {
                     coordinates: coordinates,
-                    type: 'LineString'
+                    type: "LineString"
                   }
                 }
               },
               layout: {
-                'line-join': 'round',
-                'line-cap': 'round'
+                "line-join": "round",
+                "line-cap": "round"
               },
               paint: {
-                'line-color': colors[stopGroupKey],
-                'line-width': 4
+                "line-color": colors[stopGroupKey],
+                "line-width": 4
               }
             });
           });
         });
 
-        /*stops.data.forEach(stop => {
-          const point = new OSPoint(stop.Location_Northing, stop.Location_Easting);
+        stops.data.forEach(stop => {
+          const point = new OSPoint(
+            stop.Location_Northing,
+            stop.Location_Easting
+          );
           const latLong = point.toWGS84();
           if (!isNaN(latLong.longitude) && !isNaN(latLong.latitude)) {
             this.stops.push({
               name: stop.Stop_Name,
               location: [latLong.longitude, latLong.latitude]
             });
-            //console.log(stop);
           }
-        });*/
+        });
       });
     }
   }
 };
 </script>
+
+<style>
+.mapboxgl-popup-content {
+  background: blue;
+  color: white;
+}
+</style>
