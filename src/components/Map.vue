@@ -7,10 +7,10 @@
     :zoom="9"
   >
     <MglMarker
-      v-for="stop in stops"
+      v-for="(stop, index) in stops"
       :coordinates="stop.location"
       color="blue"
-      :key="stop.name + stop.location[0]"
+      :key="stop.name + index"
     />
   </MglMap>
 </template>
@@ -22,6 +22,16 @@ import { MglMap, MglMarker } from 'vue-mapbox';
 import PapaParse from 'papaparse';
 import axios from 'axios';
 import OSPoint from 'ospoint';
+import groupBy from 'lodash/groupBy';
+import qs from 'query-string';
+
+const colors = {
+  '1': '#ff7e5f',
+  '2': '#30bf60',
+  '3': '#346fed',
+  '4': '#e02636',
+  '5': '#66faff'
+};
 
 export default {
   components: {
@@ -41,22 +51,7 @@ export default {
     // We need to set mapbox-gl library here in order to use it in template
     this.mapbox = Mapbox;
   },
-  mounted() {
-    axios.get('stop-sequences-example.csv').then(response => {
-      const stops = PapaParse.parse(response.data, { header: true });
-      stops.data.forEach(stop => {
-        const point = new OSPoint(stop.Location_Northing, stop.Location_Easting);
-        const latLong = point.toWGS84();
-        if (!isNaN(latLong.longitude) && !isNaN(latLong.latitude)) {
-          this.stops.push({
-            name: stop.Stop_Name,
-            location: [latLong.longitude, latLong.latitude]
-          });
-          //console.log(latLong);
-        }
-      });
-    });
-  },
+  mounted() {},
   methods: {
     async onMapLoad(event) {
       const asyncActions = event.component.actions;
@@ -65,6 +60,106 @@ export default {
         center: [-0.1, 51.5],
         zoom: 12,
         speed: 0.7
+      });
+
+      axios.get('stop-sequences-example.csv').then(response => {
+        const stops = PapaParse.parse(response.data, { header: true });
+
+        const groupedStops = groupBy(stops.data, stop => stop.Route);
+
+        Object.keys(groupedStops).forEach(stopGroupKey => {
+          const stopGroup = groupedStops[stopGroupKey];
+          const filteredStops = stopGroup.filter(stop => stop.Run === '1');
+
+          const config = {
+            headers: {
+              'Content-Type': 'application/x-www-form-urlencoded'
+            }
+          };
+
+          let coordinatesArray = [];
+
+          let count = 0;
+          let index = 0;
+
+          filteredStops.forEach(stop => {
+            const point = new OSPoint(stop.Location_Northing, stop.Location_Easting);
+            const latLong = point.toWGS84();
+            if (!isNaN(latLong.longitude) && !isNaN(latLong.latitude)) {
+              if (!coordinatesArray[index]) {
+                coordinatesArray[index] = '';
+              }
+              coordinatesArray[index] += latLong.longitude + ',' + latLong.latitude + ';';
+              count++;
+              if (count % 20 === 0 && count !== filteredStops.length) {
+                index++;
+                if (!coordinatesArray[index]) {
+                  coordinatesArray[index] = '';
+                }
+                coordinatesArray[index] += latLong.longitude + ',' + latLong.latitude + ';';
+              }
+            }
+          });
+
+          const promises = [];
+
+          coordinatesArray.forEach(coordinates => {
+            const requestBody = {
+              geometries: 'geojson',
+              coordinates: coordinates.substring(0, coordinates.length - 1)
+            };
+
+            promises.push(
+              axios.post(
+                'https://api.mapbox.com/directions/v5/mapbox/driving?access_token=pk.eyJ1Ijoiam9uYXNuaWVzdHJvaiIsImEiOiJjazN6bmt3dHowandwM21wMzcwc21vdjdxIn0.P496caPNw9SXrMl_GbzHdw',
+                qs.stringify(requestBody),
+                config
+              )
+            );
+          });
+
+          Promise.all(promises).then(responses => {
+            const coordinates = [];
+            responses.forEach(response => {
+              coordinates.push(...response.data.routes[0].geometry.coordinates);
+            });
+            event.map.addLayer({
+              id: 'route-' + stopGroupKey,
+              type: 'line',
+              source: {
+                type: 'geojson',
+                data: {
+                  type: 'Feature',
+                  properties: {},
+                  geometry: {
+                    coordinates: coordinates,
+                    type: 'LineString'
+                  }
+                }
+              },
+              layout: {
+                'line-join': 'round',
+                'line-cap': 'round'
+              },
+              paint: {
+                'line-color': colors[stopGroupKey],
+                'line-width': 4
+              }
+            });
+          });
+        });
+
+        /*stops.data.forEach(stop => {
+          const point = new OSPoint(stop.Location_Northing, stop.Location_Easting);
+          const latLong = point.toWGS84();
+          if (!isNaN(latLong.longitude) && !isNaN(latLong.latitude)) {
+            this.stops.push({
+              name: stop.Stop_Name,
+              location: [latLong.longitude, latLong.latitude]
+            });
+            //console.log(stop);
+          }
+        });*/
       });
     }
   }
