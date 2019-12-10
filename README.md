@@ -1,5 +1,7 @@
 # swiss-ai-london-prototype
 
+[![Netlify Status](https://api.netlify.com/api/v1/badges/c66c76aa-c41f-4e96-8140-bdc00565b7ad/deploy-status)](https://app.netlify.com/sites/swiss-ai/deploys)
+
 ## Project setup
 ```
 yarn install
