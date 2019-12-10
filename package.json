@@ -8,8 +8,13 @@
     "lint": "vue-cli-service lint"
   },
   "dependencies": {
+    "@vue/eslint-config-prettier": "^6.0.0",
+    "axios": "^0.19.0",
     "core-js": "^3.4.3",
+    "file-loader": "^5.0.2",
     "mapbox-gl": "^1.6.0",
+    "ospoint": "^0.2.1",
+    "papaparse": "^5.1.0",
     "vue": "^2.6.10",
     "vue-mapbox": "^0.4.1"
   },
@@ -19,6 +24,7 @@
     "@vue/cli-service": "^4.1.0",
     "babel-eslint": "^10.0.3",
     "eslint": "^5.16.0",
+    "eslint-plugin-prettier": "^3.1.1",
     "eslint-plugin-vue": "^5.0.0",
     "vue-template-compiler": "^2.6.10"
   },
