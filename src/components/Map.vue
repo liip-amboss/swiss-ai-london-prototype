@@ -200,7 +200,7 @@ export default {
 .mapboxgl-marker {
 }
 
-mapboxgl-popup-tip {
+.mapboxgl-popup-tip {
   border-top-color: var(--popup-bg);
 }
 
