@@ -3,21 +3,27 @@
     <div class="master">
       <header class="site-header">
         <h1>Swiss ai</h1>
+        <button @click="startBus">Start bus</button>
       </header>
       <main>
-        <Map class="map" />
+        <Map class="map" ref="mapRef" />
       </main>
     </div>
   </div>
 </template>
 
 <script>
-import Map from "@/components/Map";
+import Map from '@/components/Map';
 
 export default {
-  name: "app",
+  name: 'app',
   components: {
     Map
+  },
+  methods: {
+    startBus() {
+      this.$refs.mapRef.startBus();
+    }
   }
 };
 </script>
