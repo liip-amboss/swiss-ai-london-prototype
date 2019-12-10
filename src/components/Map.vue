@@ -169,7 +169,7 @@ export default {
           const latLong = point.toWGS84();
           if (!isNaN(latLong.longitude) && !isNaN(latLong.latitude)) {
             this.stops.push({
-              name: stop.Stop_Name,
+              name: stop.Stop_Name.toLowerCase(),
               location: [latLong.longitude, latLong.latitude]
             });
           }
@@ -181,8 +181,37 @@ export default {
 </script>
 
 <style>
+:root {
+  --popup-bg: blue;
+  --popup-color: white;
+}
+
 .mapboxgl-popup-content {
-  background: blue;
-  color: white;
+  padding: 1rem;
+  padding-top: 2rem;
+  font-family: "Avenir", Helvetica, Arial, sans-serif;
+  letter-spacing: 0.05em;
+  font-size: 1rem;
+  color: var(--popup-color);
+  background: var(--popup-bg);
+  text-transform: capitalize;
+}
+
+.mapboxgl-marker {
+}
+
+mapboxgl-popup-tip {
+  border-top-color: var(--popup-bg);
+}
+
+.mapboxgl-marker svg {
+  height: 24px;
+}
+
+.mapboxgl-popup-close-button {
+  color: var(--popup-color);
+  background: transparent;
+  font-size: 1.5rem;
+  line-height: 1;
 }
 </style>
