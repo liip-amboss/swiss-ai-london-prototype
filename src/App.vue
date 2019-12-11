@@ -9,16 +9,30 @@
             <custom-switch @change="toggleMapstyle" />
           </div>
           <div class="select-wrapper">
-            <p class="select-label">Select a bus line</p>
-            <select class="form-select" v-model="busroute">
-              <option v-for="(route, index) in routes" :key="index" :value="route.route">{{
-                'Route-' + route.route
-              }}</option>
+            <label class="form-label select-label" for="bus-route-relect"
+              >Select a bus line</label
+            >
+            <select
+              class="form-select"
+              v-model="busroute"
+              id="bus-route-relect"
+            >
+              <option
+                v-for="(route, index) in routes"
+                :key="index"
+                :value="route.route"
+                >{{ "Route-" + route.route }}</option
+              >
             </select>
           </div>
 
           <button class="start-bus" @click="startBus">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+            >
               <g fill="none" fill-rule="evenodd">
                 <path
                   fill="#fff"
@@ -38,9 +52,14 @@
           </button>
         </div>
 
-        <div>
+        <div class="brand">
           <span class="powered-by">powered by</span>
-          <svg xmlns="http://www.w3.org/2000/svg" width="116" height="15" viewBox="0 0 200 27">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="116"
+            height="15"
+            viewBox="0 0 200 27"
+          >
             <path
               fill="#9e9e9e"
               fill-rule="evenodd"
@@ -58,21 +77,21 @@
 </template>
 
 <script>
-import Map from '@/components/Map';
-import CustomSwitch from '@/components/Switch';
-import LiipIcon from '@/components/LiipIcon';
+import Map from "@/components/Map";
+import CustomSwitch from "@/components/Switch";
+import LiipIcon from "@/components/LiipIcon";
 
-import { mapState, mapMutations } from 'vuex';
+import { mapState, mapMutations } from "vuex";
 
 export default {
-  name: 'app',
+  name: "app",
   components: {
     Map,
     CustomSwitch,
     LiipIcon
   },
   computed: {
-    ...mapState(['actualRoute']),
+    ...mapState(["actualRoute"]),
     busroute: {
       get() {
         return this.actualRoute;
@@ -91,7 +110,7 @@ export default {
     };
   },
   methods: {
-    ...mapMutations(['setActualRoute']),
+    ...mapMutations(["setActualRoute"]),
     startBus() {
       if (!this.started) {
         this.started = true;
@@ -118,7 +137,7 @@ export default {
 html {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  font-family: 'Work Sans', sans-serif;
+  font-family: "Work Sans", sans-serif;
   color: #353535;
   font-size: 14px;
 }
@@ -134,7 +153,6 @@ body {
 
 .site-header {
   padding: 1.5rem;
-  height: 300px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -146,12 +164,17 @@ body {
   box-shadow: 5px 5px 20px 0 rgba(0, 0, 0, 0.2);
 }
 
+.brand {
+  margin-top: 2rem;
+}
+
 .powered-by {
   color: #9e9e9e;
   padding-right: 0.5rem;
 }
 
 .switch-poi {
+  margin-top: 2em;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -163,7 +186,6 @@ body {
   align-items: center;
   width: 100%;
   margin-top: 1.5em;
-
   padding: 0.75rem;
   font-weight: bold;
   border: 0;
@@ -182,7 +204,13 @@ body {
   font-size: 1rem;
 }
 
-/* form select */
+.form-label {
+  margin-top: 2rem;
+}
+
+/*
+Form select
+*/
 .form-select {
   display: block;
   color: #444;
@@ -193,6 +221,7 @@ body {
   max-width: 100%;
   box-sizing: border-box;
   margin: 0;
+  margin-top: 0.5rem;
   border: 2px solid #aaa;
   border-radius: 0.5em;
   -moz-appearance: none;
@@ -200,7 +229,6 @@ body {
   appearance: none;
   background-color: white;
   background-image: url(data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNTUgMjU1Ij4gIDxwYXRoIGZpbGw9IiM4RDhEOEQiIGQ9Ik0wIDYzLjc1bDEyNy41IDEyNy41TDI1NSA2My43NXoiLz48L3N2Zz4=);
-
   background-repeat: no-repeat, repeat;
   background-position: right 0.7em top 50%, 0 0;
   background-size: 0.65em auto, 100%;
@@ -227,10 +255,6 @@ body {
 }
 
 .select-wrapper {
-  margin-top: 20px;
-}
-
-.select-label {
-  margin-bottom: 0.5rem;
+  margin-top: 1.5rem;
 }
 </style>
