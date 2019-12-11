@@ -9,7 +9,7 @@
     :showZoom="true"
   >
     <MglNavigationControl :showCompass="false" position="top-right" />
-    <MglMarker
+    <!--<MglMarker
       v-for="(stop, i) in filteredStops"
       :coordinates="stop.location"
       color="blue"
@@ -18,18 +18,19 @@
       <template slot="marker">
         <img src="bus-stop-small.png" width="20" height="20" />
       </template>
-      <MglPopup>
-        <div class="mapbox-popup">
-          <strong>{{ stop.name }}</strong>
-        </div>
-      </MglPopup>
-    </MglMarker>
+
+    </MglMarker>-->
+    <MglPopup :showed="openPopup" :coordinates="activeStopLocation" @added="onAdded">
+      <div class="mapbox-popup">
+        <strong>{{ activeStopName }}</strong>
+      </div>
+    </MglPopup>
   </MglMap>
 </template>
 
 <script>
 import Mapbox from 'mapbox-gl';
-import { MglMap, MglPopup, MglMarker, MglNavigationControl } from 'vue-mapbox';
+import { MglMap, MglPopup, MglNavigationControl } from 'vue-mapbox';
 import { bearing, point } from '@turf/turf';
 
 import PapaParse from 'papaparse';
@@ -66,13 +67,24 @@ const colors = {
 export default {
   components: {
     MglMap,
-    MglPopup,
-    MglMarker,
-    MglNavigationControl
+    MglNavigationControl,
+    MglPopup
   },
   computed: {
     filteredStops() {
       return this.stops.filter(stop => stop.route === this.actualRoute);
+    },
+    activeStopLocation() {
+      if (!this.activeStop) {
+        return [0, 0];
+      }
+      return this.activeStop.location;
+    },
+    activeStopName() {
+      if (!this.activeStop) {
+        return '';
+      }
+      return this.activeStop.name;
     }
   },
   data() {
@@ -83,7 +95,10 @@ export default {
       stops: [],
       actualRoute: '9',
       routes: [],
-      routesToRender: []
+      routesToRender: [],
+      activeStop: null,
+      openPopup: false,
+      popup: null
     };
   },
   async mounted() {
@@ -92,11 +107,12 @@ export default {
       stop => colors[stop.Route] && stop.Run === '1'
     );
 
-    stops.forEach(stop => {
+    stops.forEach((stop, index) => {
       const point = new OSPoint(stop.Location_Northing, stop.Location_Easting);
       const latLong = point.toWGS84();
       if (!isNaN(latLong.longitude) && !isNaN(latLong.latitude)) {
         this.stops.push({
+          id: index,
           name: stop.Stop_Name.toLowerCase(),
           route: stop.Route,
           location: [latLong.longitude, latLong.latitude]
@@ -195,6 +211,13 @@ export default {
         this.mapbox.addImage('bus', image);
       });
 
+      this.mapbox.loadImage('bus-stop-small.png', (error, image) => {
+        if (error) throw error;
+        this.mapbox.addImage('bus-stop', image);
+      });
+
+      this.renderMarkers();
+
       const asyncActions = event.component.actions;
 
       this.mapbox.flyTo({
@@ -207,29 +230,40 @@ export default {
       if (!this.mapbox) {
         this.routesToRender.push(route);
       } else {
-        this.mapbox.addLayer({
-          id: 'route-' + route.route,
-          type: 'line',
-          source: {
-            type: 'geojson',
-            data: {
-              type: 'Feature',
-              properties: {},
-              geometry: {
-                coordinates: route.coordinates,
-                type: 'LineString'
+        const layers = this.mapbox.getStyle().layers;
+        let firstSymbolId;
+        for (let i = 0; i < layers.length; i++) {
+          if (layers[i].type === 'symbol') {
+            firstSymbolId = layers[i].id;
+            break;
+          }
+        }
+        this.mapbox.addLayer(
+          {
+            id: 'route-' + route.route,
+            type: 'line',
+            source: {
+              type: 'geojson',
+              data: {
+                type: 'Feature',
+                properties: {},
+                geometry: {
+                  coordinates: route.coordinates,
+                  type: 'LineString'
+                }
               }
+            },
+            layout: {
+              'line-join': 'round',
+              'line-cap': 'round'
+            },
+            paint: {
+              'line-color': colors[route.route],
+              'line-width': 4
             }
           },
-          layout: {
-            'line-join': 'round',
-            'line-cap': 'round'
-          },
-          paint: {
-            'line-color': colors[route.route],
-            'line-width': 4
-          }
-        });
+          firstSymbolId
+        );
       }
     },
     renderRoutes() {
@@ -343,11 +377,58 @@ export default {
       ];
       const features = this.mapbox.queryRenderedFeatures(bbox);
       features.forEach(feature => {
-        if (feature.source.startsWith('route-')) {
+        if (feature.source.startsWith('marker')) {
+          const markerId = parseInt(feature.source.split('-')[1]);
+          this.activeStop = this.stops.find(stop => stop.id === markerId);
+          this.popup.addTo(this.mapbox);
+          this.openPopup = true;
+        } else if (
+          feature.source.startsWith('route-') &&
+          !features.some(feature => feature.source.startsWith('marker-'))
+        ) {
           const routeNumber = feature.source.split('-')[1];
           this.actualRoute = routeNumber;
+          this.removeMarkers();
+          setTimeout(() => {
+            this.renderMarkers();
+          }, 100);
         }
       });
+    },
+    renderMarkers() {
+      this.filteredStops.forEach(stop => {
+        this.mapbox.addLayer({
+          id: 'marker-' + stop.id,
+          source: {
+            type: 'geojson',
+            data: {
+              type: 'Feature',
+              properties: {},
+              geometry: {
+                coordinates: stop.location,
+                type: 'Point'
+              }
+            }
+          },
+          type: 'symbol',
+          layout: {
+            'icon-image': 'bus-stop'
+          }
+        });
+      });
+    },
+    removeMarkers() {
+      const layers = this.mapbox.getStyle().layers;
+      let firstSymbolId;
+      for (let i = 0; i < layers.length; i++) {
+        if (layers[i].id.startsWith('marker')) {
+          this.mapbox.removeLayer(layers[i].id);
+          this.mapbox.removeSource(layers[i].id);
+        }
+      }
+    },
+    onAdded(event) {
+      this.popup = event.popup;
     }
   },
   watch: {
