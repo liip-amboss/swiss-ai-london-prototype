@@ -2,10 +2,25 @@
   <div id="app">
     <div class="master">
       <header class="site-header">
+        <img src="transport-for-london.png" />
         <div>
-          <img src="transport-for-london.png" />
-          <button @click="startBus">Start bus</button>
-          <button @click="toggleMapstyle">Show POIs</button>
+          <div class="switch-poi">
+            <span>Show the POIs</span>
+            <custom-switch @change="toggleMapstyle" />
+          </div>
+          <button class="start-bus" @click="startBus">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24">
+              <g fill="none" fill-rule="evenodd">
+                <path
+                  fill="#fff"
+                  d="M23.242 3.1h-2.153v-.502A.602.602 0 0 0 20.487 2H3.517a.603.603 0 0 0-.604.598V3.1H.761C.34 3.1 0 3.438 0 3.853V7.02c0 .417.341.754.76.754.422 0 .762-.338.762-.754V4.607h1.39v15.211c0 .33.273.598.604.598h.574v1.166c0 .23.19.418.422.418H5.57a.421.421 0 0 0 .422-.418v-1.166h12.024v1.166c0 .23.19.418.423.418h1.055a.421.421 0 0 0 .423-.418v-1.166h.568a.602.602 0 0 0 .603-.598V4.608h1.39V7.02c0 .416.342.753.762.753S24 7.437 24 7.021V3.854a.753.753 0 0 0-.758-.754zM4.724 18.028a.522.522 0 0 1-.524-.519c0-.285.235-.518.524-.518.288 0 .523.233.523.518a.522.522 0 0 1-.523.519zm2.244.3a.825.825 0 0 1-.827-.82c0-.45.372-.819.827-.819.456 0 .828.369.828.82a.825.825 0 0 1-.828.819zm10.096 0a.824.824 0 0 1-.826-.82c0-.45.37-.819.826-.819.456 0 .828.369.828.82a.826.826 0 0 1-.828.819zm2.245-.3a.522.522 0 0 1-.523-.519.522.522 0 1 1 1.047 0 .522.522 0 0 1-.524.519zm.949-3.233c0 .33-.247.599-.549.599H4.294c-.302 0-.548-.27-.548-.599V5.468c0-.108.026-.21.073-.299a.545.545 0 0 0 .475.3H19.71c.203 0 .38-.121.475-.3.046.087.074.19.074.3v9.326z"
+                />
+              </g>
+            </svg>
+            <span>
+              Start the bus
+            </span>
+          </button>
         </div>
 
         <div>
@@ -28,11 +43,13 @@
 
 <script>
 import Map from '@/components/Map';
+import CustomSwitch from '@/components/Switch';
 
 export default {
   name: 'app',
   components: {
-    Map
+    Map,
+    CustomSwitch
   },
   methods: {
     startBus() {
@@ -49,7 +66,7 @@ export default {
 html {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  font-family: 'Avenir', Helvetica, Arial, sans-serif;
+  font-family: 'WorkSans', 'Avenir', Helvetica, Arial, sans-serif;
   color: #353535;
 }
 
@@ -62,21 +79,47 @@ body {
   min-height: 100vh;
 }
 
-.master {
-  display: grid;
-  grid-template-columns: 300px 1fr;
-}
-
 .site-header {
   padding: 1.5rem;
-  border-right: 8px solid #9995;
+  height: 300px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 2;
+  background-color: white;
+  box-shadow: 5px 5px 20px 0 rgba(0, 0, 0, 0.2);
 }
 
 .powered-by {
   color: #9e9e9e;
-  padding: 0.5rem;
+  padding-right: 0.5rem;
+}
+
+.switch-poi {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.start-bus {
+  margin-top: 20px;
+  width: 200px;
+  padding-top: 0.75rem;
+  padding-bottom: 0.75rem;
+  border-radius: 18px;
+  background-color: #1c3e94;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+}
+
+.start-bus span {
+  font-size: 16px;
+  color: white;
+  padding-left: 5px;
 }
 </style>

@@ -7,7 +7,7 @@
     :zoom="9"
     :showZoom="true"
   >
-    <MglNavigationControl :showCompass="false" position="top-left" />
+    <MglNavigationControl :showCompass="false" position="top-right" />
     <MglMarker v-for="(stop, i) in stops" :coordinates="stop.location" color="blue" :key="i">
       <template slot="marker">
         <img src="bus-stop-small.png" width="20" height="20" />
