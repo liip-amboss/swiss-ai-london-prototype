@@ -172,9 +172,15 @@ export default {
             coordinates
           });
         }
-
-        event.map.addLayer({
-          id: 'route-' + stopGroupKey,
+      }
+      this.renderRoutes();
+    },
+    renderRoutes() {
+      this.routes.forEach(route => {
+        if (this.mapbox.getLayer('route-' + route.route))
+          this.mapbox.removeLayer('route-' + route.route);
+        this.mapbox.addLayer({
+          id: 'route-' + route.route,
           type: 'line',
           source: {
             type: 'geojson',
@@ -182,7 +188,7 @@ export default {
               type: 'Feature',
               properties: {},
               geometry: {
-                coordinates: coordinates,
+                coordinates: route.coordinates,
                 type: 'LineString'
               }
             }
@@ -192,11 +198,11 @@ export default {
             'line-cap': 'round'
           },
           paint: {
-            'line-color': colors[stopGroupKey],
+            'line-color': colors[route.route],
             'line-width': 4
           }
         });
-      }
+      });
     },
     startBus() {
       const startPoint = [
@@ -282,6 +288,9 @@ export default {
       } else {
         this.mapStyle = 'mapbox://styles/mapbox/streets-v11';
       }
+      setTimeout(() => {
+        this.renderRoutes();
+      }, 500);
     }
   }
 };
