@@ -4,6 +4,7 @@
     :mapStyle="mapStyle"
     @load="onMapLoad"
     @click="onMapClick"
+    @mousemove="onMouseOver"
     :center="[-0.1, 51.5]"
     :zoom="9"
     :showZoom="true"
@@ -372,8 +373,8 @@ export default {
     },
     onMapClick(event) {
       const bbox = [
-        [event.mapboxEvent.point.x - 5, event.mapboxEvent.point.y - 5],
-        [event.mapboxEvent.point.x + 5, event.mapboxEvent.point.y + 5]
+        [event.mapboxEvent.point.x - 2, event.mapboxEvent.point.y - 2],
+        [event.mapboxEvent.point.x + 2, event.mapboxEvent.point.y + 2]
       ];
       const features = this.mapbox.queryRenderedFeatures(bbox);
       features.forEach(feature => {
@@ -435,6 +436,23 @@ export default {
     },
     onAdded(event) {
       this.popup = event.popup;
+    },
+    onMouseOver(event) {
+      const bbox = [
+        [event.mapboxEvent.point.x + 2, event.mapboxEvent.point.y - 2],
+        [event.mapboxEvent.point.x + 2, event.mapboxEvent.point.y + 2]
+      ];
+      const features = this.mapbox.queryRenderedFeatures(bbox);
+      const element = document.getElementsByClassName('mapboxgl-canvas')[0];
+      if (
+        features.some(
+          feature => feature.source.startsWith('marker-') || feature.source.startsWith('route-')
+        )
+      ) {
+        element.style.cursor = 'pointer';
+      } else {
+        element.style.cursor = 'grab';
+      }
     }
   },
   watch: {
