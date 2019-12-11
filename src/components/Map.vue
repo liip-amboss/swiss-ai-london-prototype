@@ -7,6 +7,9 @@
     :zoom="9"
   >
     <MglMarker v-for="(stop, i) in stops" :coordinates="stop.location" color="blue" :key="i">
+      <template slot="marker">
+        <img src="pin-bus.png" width="20" height="20" />
+      </template>
       <MglPopup>
         <div class="mapbox-popup">
           <strong>{{ stop.name }}</strong>
@@ -64,13 +67,20 @@ export default {
         'pk.eyJ1Ijoiam9uYXNuaWVzdHJvaiIsImEiOiJjazN6bmt3dHowandwM21wMzcwc21vdjdxIn0.P496caPNw9SXrMl_GbzHdw', // your access token. Needed if you using Mapbox maps
       mapStyle: 'mapbox://styles/jonasniestroj/ck40ytrxe0otp1cqqyri422ly', // your map style
       stops: [],
-      routes: []
+      routes: [],
+      markerLayer: {
+        'icon-image': 'custom-marker'
+      }
     };
   },
   mounted() {},
   methods: {
     async onMapLoad(event) {
       this.mapbox = event.map;
+      this.mapbox.loadImage('pin-bus.png', (error, image) => {
+        if (error) throw error;
+        this.mapbox.addImage('custom-marker', image);
+      });
       const asyncActions = event.component.actions;
 
       const newParams = await asyncActions.flyTo({
