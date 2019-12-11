@@ -85,13 +85,15 @@ export default {
       );
 
       stops.forEach(stop => {
-        const point = new OSPoint(stop.Location_Northing, stop.Location_Easting);
-        const latLong = point.toWGS84();
-        if (!isNaN(latLong.longitude) && !isNaN(latLong.latitude)) {
-          this.stops.push({
-            name: stop.Stop_Name.toLowerCase(),
-            location: [latLong.longitude, latLong.latitude]
-          });
+        if (stop.Route === '9') {
+          const point = new OSPoint(stop.Location_Northing, stop.Location_Easting);
+          const latLong = point.toWGS84();
+          if (!isNaN(latLong.longitude) && !isNaN(latLong.latitude)) {
+            this.stops.push({
+              name: stop.Stop_Name.toLowerCase(),
+              location: [latLong.longitude, latLong.latitude]
+            });
+          }
         }
       });
 
@@ -167,41 +169,46 @@ export default {
           }
         });
         if (coordinates.length > 0) {
-          this.routes.push({
+          const route = {
             route: stopGroupKey,
             coordinates
-          });
+          };
+
+          this.routes.push(route);
+          this.renderRoute(route);
         }
       }
-      this.renderRoutes();
+    },
+    renderRoute(route) {
+      this.mapbox.addLayer({
+        id: 'route-' + route.route,
+        type: 'line',
+        source: {
+          type: 'geojson',
+          data: {
+            type: 'Feature',
+            properties: {},
+            geometry: {
+              coordinates: route.coordinates,
+              type: 'LineString'
+            }
+          }
+        },
+        layout: {
+          'line-join': 'round',
+          'line-cap': 'round'
+        },
+        paint: {
+          'line-color': colors[route.route],
+          'line-width': 4
+        }
+      });
     },
     renderRoutes() {
       this.routes.forEach(route => {
         if (this.mapbox.getLayer('route-' + route.route))
           this.mapbox.removeLayer('route-' + route.route);
-        this.mapbox.addLayer({
-          id: 'route-' + route.route,
-          type: 'line',
-          source: {
-            type: 'geojson',
-            data: {
-              type: 'Feature',
-              properties: {},
-              geometry: {
-                coordinates: route.coordinates,
-                type: 'LineString'
-              }
-            }
-          },
-          layout: {
-            'line-join': 'round',
-            'line-cap': 'round'
-          },
-          paint: {
-            'line-color': colors[route.route],
-            'line-width': 4
-          }
-        });
+        this.renderRoute(route);
       });
     },
     startBus() {
