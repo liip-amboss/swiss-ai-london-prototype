@@ -4,7 +4,7 @@
       <header class="site-header">
         <img src="transport-for-london.svg" />
         <select class="form-select">
-          <option>Select a bus line</option>
+          <option>Select a bus route</option>
           <option>Apples</option>
           <option>Bananas</option>
           <option>Grapes</option>
