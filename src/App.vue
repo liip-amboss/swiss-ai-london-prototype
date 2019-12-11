@@ -121,6 +121,10 @@ body {
   border: 0;
 }
 
+.start-bus:focus {
+  outline: none;
+}
+
 .start-bus span {
   font-size: 16px;
   color: white;
