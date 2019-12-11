@@ -77,10 +77,12 @@ export default {
   methods: {
     async onMapLoad(event) {
       this.mapbox = event.map;
-      this.mapbox.loadImage('pin-bus.png', (error, image) => {
+
+      this.mapbox.loadImage('bus.png', (error, image) => {
         if (error) throw error;
-        this.mapbox.addImage('custom-marker', image);
+        this.mapbox.addImage('bus', image);
       });
+
       const asyncActions = event.component.actions;
 
       const newParams = await asyncActions.flyTo({
@@ -264,7 +266,7 @@ export default {
         source: 'point',
         type: 'symbol',
         layout: {
-          'icon-image': 'airport-15',
+          'icon-image': 'bus',
           'icon-rotate': ['get', 'bearing'],
           'icon-rotation-alignment': 'map',
           'icon-allow-overlap': true,
