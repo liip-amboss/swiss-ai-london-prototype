@@ -3,12 +3,18 @@
     :accessToken="accessToken"
     :mapStyle="mapStyle"
     @load="onMapLoad"
+    @click="onMapClick"
     :center="[-0.1, 51.5]"
     :zoom="9"
     :showZoom="true"
   >
     <MglNavigationControl :showCompass="false" position="top-right" />
-    <MglMarker v-for="(stop, i) in stops" :coordinates="stop.location" color="blue" :key="i">
+    <MglMarker
+      v-for="(stop, i) in filteredStops"
+      :coordinates="stop.location"
+      color="blue"
+      :key="i"
+    >
       <template slot="marker">
         <img src="bus-stop-small.png" width="20" height="20" />
       </template>
@@ -64,12 +70,18 @@ export default {
     MglMarker,
     MglNavigationControl
   },
+  computed: {
+    filteredStops() {
+      return this.stops.filter(stop => stop.route === this.actualRoute);
+    }
+  },
   data() {
     return {
       accessToken:
         'pk.eyJ1Ijoiam9uYXNuaWVzdHJvaiIsImEiOiJjazN6bmt3dHowandwM21wMzcwc21vdjdxIn0.P496caPNw9SXrMl_GbzHdw', // your access token. Needed if you using Mapbox maps
       mapStyle: 'mapbox://styles/jonasniestroj/ck40ytrxe0otp1cqqyri422ly', // your map style
       stops: [],
+      actualRoute: '9',
       routes: [],
       routesToRender: []
     };
@@ -81,15 +93,14 @@ export default {
     );
 
     stops.forEach(stop => {
-      if (stop.Route === '9') {
-        const point = new OSPoint(stop.Location_Northing, stop.Location_Easting);
-        const latLong = point.toWGS84();
-        if (!isNaN(latLong.longitude) && !isNaN(latLong.latitude)) {
-          this.stops.push({
-            name: stop.Stop_Name.toLowerCase(),
-            location: [latLong.longitude, latLong.latitude]
-          });
-        }
+      const point = new OSPoint(stop.Location_Northing, stop.Location_Easting);
+      const latLong = point.toWGS84();
+      if (!isNaN(latLong.longitude) && !isNaN(latLong.latitude)) {
+        this.stops.push({
+          name: stop.Stop_Name.toLowerCase(),
+          route: stop.Route,
+          location: [latLong.longitude, latLong.latitude]
+        });
       }
     });
 
@@ -324,6 +335,19 @@ export default {
       setTimeout(() => {
         this.renderRoutes();
       }, 500);
+    },
+    onMapClick(event) {
+      const bbox = [
+        [event.mapboxEvent.point.x - 5, event.mapboxEvent.point.y - 5],
+        [event.mapboxEvent.point.x + 5, event.mapboxEvent.point.y + 5]
+      ];
+      const features = this.mapbox.queryRenderedFeatures(bbox);
+      features.forEach(feature => {
+        if (feature.source.startsWith('route-')) {
+          const routeNumber = feature.source.split('-')[1];
+          this.actualRoute = routeNumber;
+        }
+      });
     }
   },
   watch: {
