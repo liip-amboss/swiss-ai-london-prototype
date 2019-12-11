@@ -37,6 +37,7 @@
       <main>
         <Map class="map" ref="mapRef" />
       </main>
+      <liip-icon />
     </div>
   </div>
 </template>
@@ -44,12 +45,14 @@
 <script>
 import Map from '@/components/Map';
 import CustomSwitch from '@/components/Switch';
+import LiipIcon from '@/components/LiipIcon';
 
 export default {
   name: 'app',
   components: {
     Map,
-    CustomSwitch
+    CustomSwitch,
+    LiipIcon
   },
   methods: {
     startBus() {
