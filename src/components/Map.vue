@@ -45,7 +45,7 @@ export default {
     return {
       accessToken:
         'pk.eyJ1Ijoiam9uYXNuaWVzdHJvaiIsImEiOiJjazN6bmt3dHowandwM21wMzcwc21vdjdxIn0.P496caPNw9SXrMl_GbzHdw', // your access token. Needed if you using Mapbox maps
-      mapStyle: 'mapbox://styles/mapbox/streets-v11', // your map style
+      mapStyle: 'mapbox://styles/jonasniestroj/ck40ytrxe0otp1cqqyri422ly', // your map style
       stops: [],
       routes: []
     };
@@ -252,6 +252,13 @@ export default {
       };
 
       animate();
+    },
+    toggleMapstyle() {
+      if (this.mapStyle !== 'mapbox://styles/jonasniestroj/ck40ytrxe0otp1cqqyri422ly') {
+        this.mapStyle = 'mapbox://styles/jonasniestroj/ck40ytrxe0otp1cqqyri422ly';
+      } else {
+        this.mapStyle = 'mapbox://styles/mapbox/streets-v11';
+      }
     }
   }
 };

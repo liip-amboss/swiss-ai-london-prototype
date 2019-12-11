@@ -4,6 +4,7 @@
       <header class="site-header">
         <h1>Swiss ai</h1>
         <button @click="startBus">Start bus</button>
+        <button @click="toggleMapstyle">Show POIs</button>
       </header>
       <main>
         <Map class="map" ref="mapRef" />
@@ -23,6 +24,9 @@ export default {
   methods: {
     startBus() {
       this.$refs.mapRef.startBus();
+    },
+    toggleMapstyle() {
+      this.$refs.mapRef.toggleMapstyle();
     }
   }
 };
