@@ -28,11 +28,28 @@ import groupBy from 'lodash/groupBy';
 import qs from 'query-string';
 
 const colors = {
-  '1': '#ff7e5f',
-  '2': '#30bf60',
-  '3': '#346fed',
-  '4': '#e02636',
-  '5': '#66faff'
+  '8': '#9f643c',
+  '9': '#224584',
+  '11': '#a9a6c3',
+  '14': '#777776',
+  '15': '#459b8e',
+  '23': '#d986a9',
+  '24': '#6dbedf',
+  '25': '#8cc3b3',
+  '38': '#783534',
+  '43': '#a99171',
+  '59': '#1a1919',
+  '73': '#4da353',
+  '74': '#c6317b',
+  '88': '#c73734',
+  '139': '#b4b5b4',
+  '148': '#2b663a',
+  '159': '#773466',
+  '188': '#eabb97',
+  '205': '#df8f44',
+  '274': '#3a8abf',
+  '390': '#90235b',
+  '453': '#a6c454'
 };
 
 export default {
@@ -62,118 +79,124 @@ export default {
         speed: 0.7
       });
 
-      axios.get('stop-sequences-example.csv').then(response => {
-        const stops = PapaParse.parse(response.data, { header: true });
+      const response = await axios.get('bus-sequences.csv');
+      const stops = PapaParse.parse(response.data, { header: true }).data.filter(
+        stop => colors[stop.Route] && stop.Run === '1'
+      );
 
-        const groupedStops = groupBy(stops.data, stop => stop.Route);
-
-        Object.keys(groupedStops).forEach(stopGroupKey => {
-          const stopGroup = groupedStops[stopGroupKey];
-          const filteredStops = stopGroup.filter(stop => stop.Run === '1');
-
-          const config = {
-            headers: {
-              'Content-Type': 'application/x-www-form-urlencoded'
-            }
-          };
-
-          let coordinatesArray = [];
-
-          let count = 0;
-          let index = 0;
-
-          let firstCoordinate;
-          let lastCoordinate;
-
-          filteredStops.forEach(stop => {
-            const point = new OSPoint(stop.Location_Northing, stop.Location_Easting);
-            const latLong = point.toWGS84();
-            if (!isNaN(latLong.longitude) && !isNaN(latLong.latitude)) {
-              if (!coordinatesArray[index]) {
-                coordinatesArray[index] = '';
-                firstCoordinate = latLong;
-              }
-              coordinatesArray[index] += latLong.longitude + ',' + latLong.latitude + ';';
-              count++;
-              if (count % 20 === 0 && count !== filteredStops.length) {
-                index++;
-                if (!coordinatesArray[index]) {
-                  coordinatesArray[index] = '';
-                }
-                coordinatesArray[index] += latLong.longitude + ',' + latLong.latitude + ';';
-              }
-              if (count === filteredStops.length) {
-                lastCoordinate = latLong;
-              }
-            }
+      stops.forEach(stop => {
+        const point = new OSPoint(stop.Location_Northing, stop.Location_Easting);
+        const latLong = point.toWGS84();
+        if (!isNaN(latLong.longitude) && !isNaN(latLong.latitude)) {
+          this.stops.push({
+            name: stop.Stop_Name.toLowerCase(),
+            location: [latLong.longitude, latLong.latitude]
           });
+        }
+      });
 
-          const promises = [];
+      const groupedStops = groupBy(stops, stop => stop.Route);
 
-          coordinatesArray.forEach(coordinates => {
-            const requestBody = {
-              geometries: 'geojson',
-              coordinates: coordinates.substring(0, coordinates.length - 1)
-            };
+      const groupedStopsKeys = Object.keys(groupedStops);
 
-            promises.push(
-              axios.post(
-                'https://api.mapbox.com/directions/v5/mapbox/driving?access_token=pk.eyJ1Ijoiam9uYXNuaWVzdHJvaiIsImEiOiJjazN6bmt3dHowandwM21wMzcwc21vdjdxIn0.P496caPNw9SXrMl_GbzHdw',
-                qs.stringify(requestBody),
-                config
-              )
-            );
-          });
+      for (let i = 0; i < groupedStopsKeys.length; i++) {
+        const stopGroupKey = groupedStopsKeys[i];
+        const stopGroup = groupedStops[stopGroupKey];
 
-          Promise.all(promises).then(responses => {
-            const coordinates = [];
-            responses.forEach(response => {
-              coordinates.push(...response.data.routes[0].geometry.coordinates);
-            });
-            if (coordinates.length > 0) {
-              this.routes.push({
-                route: stopGroupKey,
-                coordinates
-              });
-            }
+        const filteredStops = stopGroup.filter(stop => stop.Run === '1');
 
-            event.map.addLayer({
-              id: 'route-' + stopGroupKey,
-              type: 'line',
-              source: {
-                type: 'geojson',
-                data: {
-                  type: 'Feature',
-                  properties: {},
-                  geometry: {
-                    coordinates: coordinates,
-                    type: 'LineString'
-                  }
-                }
-              },
-              layout: {
-                'line-join': 'round',
-                'line-cap': 'round'
-              },
-              paint: {
-                'line-color': colors[stopGroupKey],
-                'line-width': 4
-              }
-            });
-          });
-        });
+        const config = {
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+          }
+        };
 
-        stops.data.forEach(stop => {
+        let coordinatesArray = [];
+
+        let count = 0;
+        let index = 0;
+
+        let firstCoordinate;
+        let lastCoordinate;
+
+        filteredStops.forEach(stop => {
           const point = new OSPoint(stop.Location_Northing, stop.Location_Easting);
           const latLong = point.toWGS84();
           if (!isNaN(latLong.longitude) && !isNaN(latLong.latitude)) {
-            this.stops.push({
-              name: stop.Stop_Name.toLowerCase(),
-              location: [latLong.longitude, latLong.latitude]
-            });
+            if (!coordinatesArray[index]) {
+              coordinatesArray[index] = '';
+              firstCoordinate = latLong;
+            }
+            coordinatesArray[index] += latLong.longitude + ',' + latLong.latitude + ';';
+            count++;
+            if (count % 20 === 0 && count !== filteredStops.length) {
+              index++;
+              if (!coordinatesArray[index]) {
+                coordinatesArray[index] = '';
+              }
+              coordinatesArray[index] += latLong.longitude + ',' + latLong.latitude + ';';
+            }
+            if (count === filteredStops.length) {
+              lastCoordinate = latLong;
+            }
           }
         });
-      });
+
+        const promises = [];
+
+        coordinatesArray.forEach(coordinates => {
+          const requestBody = {
+            geometries: 'geojson',
+            coordinates: coordinates.substring(0, coordinates.length - 1)
+          };
+
+          promises.push(
+            axios.post(
+              'https://api.mapbox.com/directions/v5/mapbox/driving?access_token=pk.eyJ1Ijoiam9uYXNuaWVzdHJvaiIsImEiOiJjazN6bmt3dHowandwM21wMzcwc21vdjdxIn0.P496caPNw9SXrMl_GbzHdw',
+              qs.stringify(requestBody),
+              config
+            )
+          );
+        });
+
+        const responses = await Promise.all(promises);
+        const coordinates = [];
+        responses.forEach(response => {
+          if (response.data.routes.length > 0) {
+            coordinates.push(...response.data.routes[0].geometry.coordinates);
+          }
+        });
+        if (coordinates.length > 0) {
+          this.routes.push({
+            route: stopGroupKey,
+            coordinates
+          });
+        }
+
+        event.map.addLayer({
+          id: 'route-' + stopGroupKey,
+          type: 'line',
+          source: {
+            type: 'geojson',
+            data: {
+              type: 'Feature',
+              properties: {},
+              geometry: {
+                coordinates: coordinates,
+                type: 'LineString'
+              }
+            }
+          },
+          layout: {
+            'line-join': 'round',
+            'line-cap': 'round'
+          },
+          paint: {
+            'line-color': colors[stopGroupKey],
+            'line-width': 4
+          }
+        });
+      }
     },
     startBus() {
       const startPoint = [
