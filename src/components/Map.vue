@@ -95,6 +95,8 @@ export default {
       mapStyle: 'mapbox://styles/jonasniestroj/ck40ytrxe0otp1cqqyri422ly', // your map style
       stops: [],
       actualRoute: '9',
+      actualBusRoute: null,
+      restarted: false,
       routes: [],
       routesToRender: [],
       activeStop: null,
@@ -277,6 +279,11 @@ export default {
       });
     },
     startBus() {
+      if (this.mapbox.getLayer('point')) {
+        this.mapbox.removeLayer('point');
+        this.mapbox.removeSource('point');
+        this.restarted = true;
+      }
       const startPoint = [];
 
       let routeNine;
@@ -338,6 +345,10 @@ export default {
 
       let counter = 0;
 
+      this.actualBusRoute = this.actualRoute;
+
+      const actualBusRoute = this.actualBusRoute;
+
       const animate = () => {
         busPoint.features[0].geometry.coordinates = route.features[0].geometry.coordinates[counter];
 
@@ -352,7 +363,11 @@ export default {
         // Request the next frame of animation so long the end has not been reached.
         if (counter < steps) {
           setTimeout(() => {
-            requestAnimationFrame(animate);
+            if (this.actualBusRoute === actualBusRoute && !this.restarted) {
+              animate();
+            } else if (this.restarted) {
+              this.restarted = false;
+            }
           }, 500);
         }
 

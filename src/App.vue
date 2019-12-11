@@ -17,7 +17,13 @@
                 />
               </g>
             </svg>
-            <span>
+            <span v-if="restarted">
+              Bus restarted
+            </span>
+            <span v-else-if="started">
+              Restart the bus
+            </span>
+            <span v-else>
               Start the bus
             </span>
           </button>
@@ -54,9 +60,24 @@ export default {
     CustomSwitch,
     LiipIcon
   },
+  data() {
+    return {
+      started: false,
+      restarted: false
+    };
+  },
   methods: {
     startBus() {
-      this.$refs.mapRef.startBus();
+      if (!this.started) {
+        this.started = true;
+        this.$refs.mapRef.startBus();
+      } else if (!this.restarted) {
+        this.restarted = true;
+        this.$refs.mapRef.startBus();
+        setTimeout(() => {
+          this.restarted = false;
+        }, 1000);
+      }
     },
     toggleMapstyle() {
       this.$refs.mapRef.toggleMapstyle();
@@ -69,7 +90,7 @@ export default {
 html {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  font-family: "Work Sans", sans-serif;
+  font-family: 'Work Sans', sans-serif;
   color: #353535;
   font-size: 14px;
 }
