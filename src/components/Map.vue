@@ -396,26 +396,32 @@ export default {
       });
     },
     renderMarkers() {
-      this.filteredStops.forEach(stop => {
-        this.mapbox.addLayer({
-          id: 'marker-' + stop.id,
-          source: {
-            type: 'geojson',
-            data: {
-              type: 'Feature',
-              properties: {},
-              geometry: {
-                coordinates: stop.location,
-                type: 'Point'
+      if (this.filteredStops.length > 0) {
+        this.filteredStops.forEach(stop => {
+          this.mapbox.addLayer({
+            id: 'marker-' + stop.id,
+            source: {
+              type: 'geojson',
+              data: {
+                type: 'Feature',
+                properties: {},
+                geometry: {
+                  coordinates: stop.location,
+                  type: 'Point'
+                }
               }
+            },
+            type: 'symbol',
+            layout: {
+              'icon-image': 'bus-stop'
             }
-          },
-          type: 'symbol',
-          layout: {
-            'icon-image': 'bus-stop'
-          }
+          });
         });
-      });
+      } else {
+        setTimeout(() => {
+          this.renderMarkers();
+        }, 100);
+      }
     },
     removeMarkers() {
       const layers = this.mapbox.getStyle().layers;
