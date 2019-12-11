@@ -71,166 +71,177 @@ export default {
       mapStyle: 'mapbox://styles/jonasniestroj/ck40ytrxe0otp1cqqyri422ly', // your map style
       stops: [],
       routes: [],
-      markerLayer: {
-        'icon-image': 'custom-marker'
-      }
+      routesToRender: []
     };
   },
-  mounted() {},
+  async mounted() {
+    const response = await axios.get('bus-sequences.csv');
+    const stops = PapaParse.parse(response.data, { header: true }).data.filter(
+      stop => colors[stop.Route] && stop.Run === '1'
+    );
+
+    stops.forEach(stop => {
+      if (stop.Route === '9') {
+        const point = new OSPoint(stop.Location_Northing, stop.Location_Easting);
+        const latLong = point.toWGS84();
+        if (!isNaN(latLong.longitude) && !isNaN(latLong.latitude)) {
+          this.stops.push({
+            name: stop.Stop_Name.toLowerCase(),
+            location: [latLong.longitude, latLong.latitude]
+          });
+        }
+      }
+    });
+
+    const groupedStops = groupBy(stops, stop => stop.Route);
+
+    const groupedStopsKeys = Object.keys(groupedStops);
+
+    for (let i = 0; i < groupedStopsKeys.length; i++) {
+      const stopGroupKey = groupedStopsKeys[i];
+      const stopGroup = groupedStops[stopGroupKey];
+
+      const filteredStops = stopGroup.filter(stop => stop.Run === '1');
+
+      const config = {
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        }
+      };
+
+      let coordinatesArray = [];
+
+      let count = 0;
+      let index = 0;
+
+      let firstCoordinate;
+      let lastCoordinate;
+
+      filteredStops.forEach(stop => {
+        const point = new OSPoint(stop.Location_Northing, stop.Location_Easting);
+        const latLong = point.toWGS84();
+        if (!isNaN(latLong.longitude) && !isNaN(latLong.latitude)) {
+          if (!coordinatesArray[index]) {
+            coordinatesArray[index] = '';
+            firstCoordinate = latLong;
+          }
+          coordinatesArray[index] += latLong.longitude + ',' + latLong.latitude + ';';
+          count++;
+          if (count % 20 === 0 && count !== filteredStops.length) {
+            index++;
+            if (!coordinatesArray[index]) {
+              coordinatesArray[index] = '';
+            }
+            coordinatesArray[index] += latLong.longitude + ',' + latLong.latitude + ';';
+          }
+          if (count === filteredStops.length) {
+            lastCoordinate = latLong;
+          }
+        }
+      });
+
+      const promises = [];
+
+      coordinatesArray.forEach(coordinates => {
+        const requestBody = {
+          geometries: 'geojson',
+          coordinates: coordinates.substring(0, coordinates.length - 1)
+        };
+
+        promises.push(
+          axios.post(
+            'https://api.mapbox.com/directions/v5/mapbox/driving?access_token=pk.eyJ1Ijoiam9uYXNuaWVzdHJvaiIsImEiOiJjazN6bmt3dHowandwM21wMzcwc21vdjdxIn0.P496caPNw9SXrMl_GbzHdw',
+            qs.stringify(requestBody),
+            config
+          )
+        );
+      });
+
+      const responses = await Promise.all(promises);
+      const coordinates = [];
+      responses.forEach(response => {
+        if (response.data.routes.length > 0) {
+          coordinates.push(...response.data.routes[0].geometry.coordinates);
+        }
+      });
+      if (coordinates.length > 0) {
+        const route = {
+          route: stopGroupKey,
+          coordinates
+        };
+
+        this.routes.push(route);
+        this.renderRoute(route);
+      }
+    }
+  },
   methods: {
     async onMapLoad(event) {
       this.mapbox = event.map;
 
-      this.mapbox.loadImage('bus.png', (error, image) => {
+      this.mapbox.loadImage('bus-blue.png', (error, image) => {
         if (error) throw error;
         this.mapbox.addImage('bus', image);
       });
 
       const asyncActions = event.component.actions;
 
-      const newParams = await asyncActions.flyTo({
+      this.mapbox.flyTo({
         center: [-0.1, 51.5],
         zoom: 12,
         speed: 0.7
       });
-
-      const response = await axios.get('bus-sequences.csv');
-      const stops = PapaParse.parse(response.data, { header: true }).data.filter(
-        stop => colors[stop.Route] && stop.Run === '1'
-      );
-
-      stops.forEach(stop => {
-        if (stop.Route === '9') {
-          const point = new OSPoint(stop.Location_Northing, stop.Location_Easting);
-          const latLong = point.toWGS84();
-          if (!isNaN(latLong.longitude) && !isNaN(latLong.latitude)) {
-            this.stops.push({
-              name: stop.Stop_Name.toLowerCase(),
-              location: [latLong.longitude, latLong.latitude]
-            });
-          }
-        }
-      });
-
-      const groupedStops = groupBy(stops, stop => stop.Route);
-
-      const groupedStopsKeys = Object.keys(groupedStops);
-
-      for (let i = 0; i < groupedStopsKeys.length; i++) {
-        const stopGroupKey = groupedStopsKeys[i];
-        const stopGroup = groupedStops[stopGroupKey];
-
-        const filteredStops = stopGroup.filter(stop => stop.Run === '1');
-
-        const config = {
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded'
-          }
-        };
-
-        let coordinatesArray = [];
-
-        let count = 0;
-        let index = 0;
-
-        let firstCoordinate;
-        let lastCoordinate;
-
-        filteredStops.forEach(stop => {
-          const point = new OSPoint(stop.Location_Northing, stop.Location_Easting);
-          const latLong = point.toWGS84();
-          if (!isNaN(latLong.longitude) && !isNaN(latLong.latitude)) {
-            if (!coordinatesArray[index]) {
-              coordinatesArray[index] = '';
-              firstCoordinate = latLong;
-            }
-            coordinatesArray[index] += latLong.longitude + ',' + latLong.latitude + ';';
-            count++;
-            if (count % 20 === 0 && count !== filteredStops.length) {
-              index++;
-              if (!coordinatesArray[index]) {
-                coordinatesArray[index] = '';
-              }
-              coordinatesArray[index] += latLong.longitude + ',' + latLong.latitude + ';';
-            }
-            if (count === filteredStops.length) {
-              lastCoordinate = latLong;
-            }
-          }
-        });
-
-        const promises = [];
-
-        coordinatesArray.forEach(coordinates => {
-          const requestBody = {
-            geometries: 'geojson',
-            coordinates: coordinates.substring(0, coordinates.length - 1)
-          };
-
-          promises.push(
-            axios.post(
-              'https://api.mapbox.com/directions/v5/mapbox/driving?access_token=pk.eyJ1Ijoiam9uYXNuaWVzdHJvaiIsImEiOiJjazN6bmt3dHowandwM21wMzcwc21vdjdxIn0.P496caPNw9SXrMl_GbzHdw',
-              qs.stringify(requestBody),
-              config
-            )
-          );
-        });
-
-        const responses = await Promise.all(promises);
-        const coordinates = [];
-        responses.forEach(response => {
-          if (response.data.routes.length > 0) {
-            coordinates.push(...response.data.routes[0].geometry.coordinates);
-          }
-        });
-        if (coordinates.length > 0) {
-          const route = {
-            route: stopGroupKey,
-            coordinates
-          };
-
-          this.routes.push(route);
-          this.renderRoute(route);
-        }
-      }
     },
     renderRoute(route) {
-      this.mapbox.addLayer({
-        id: 'route-' + route.route,
-        type: 'line',
-        source: {
-          type: 'geojson',
-          data: {
-            type: 'Feature',
-            properties: {},
-            geometry: {
-              coordinates: route.coordinates,
-              type: 'LineString'
+      if (!this.mapbox) {
+        this.routesToRender.push(route);
+      } else {
+        this.mapbox.addLayer({
+          id: 'route-' + route.route,
+          type: 'line',
+          source: {
+            type: 'geojson',
+            data: {
+              type: 'Feature',
+              properties: {},
+              geometry: {
+                coordinates: route.coordinates,
+                type: 'LineString'
+              }
             }
+          },
+          layout: {
+            'line-join': 'round',
+            'line-cap': 'round'
+          },
+          paint: {
+            'line-color': colors[route.route],
+            'line-width': 4
           }
-        },
-        layout: {
-          'line-join': 'round',
-          'line-cap': 'round'
-        },
-        paint: {
-          'line-color': colors[route.route],
-          'line-width': 4
-        }
-      });
+        });
+      }
     },
     renderRoutes() {
       this.routes.forEach(route => {
-        if (this.mapbox.getLayer('route-' + route.route))
+        if (this.mapbox.getLayer('route-' + route.route)) {
           this.mapbox.removeLayer('route-' + route.route);
+        }
+
         this.renderRoute(route);
       });
     },
     startBus() {
-      const startPoint = [
-        this.routes[0].coordinates[0].longitude,
-        this.routes[0].coordinates[0].latitude
-      ];
+      const startPoint = [];
+
+      let routeNine;
+
+      this.routes.forEach(route => {
+        if (route.route === '9') {
+          routeNine = route;
+          startPoint.push(route.coordinates[0].longitude);
+          startPoint.push(route.coordinates[0].latitude);
+        }
+      });
 
       var route = {
         type: 'FeatureCollection',
@@ -239,7 +250,7 @@ export default {
             type: 'Feature',
             geometry: {
               type: 'LineString',
-              coordinates: this.routes[0].coordinates
+              coordinates: routeNine.coordinates
             }
           }
         ]
@@ -284,10 +295,10 @@ export default {
       const animate = () => {
         busPoint.features[0].geometry.coordinates = route.features[0].geometry.coordinates[counter];
 
-        busPoint.features[0].properties.bearing = bearing(
+        /*busPoint.features[0].properties.bearing = bearing(
           point(route.features[0].geometry.coordinates[counter >= steps ? counter - 1 : counter]),
           point(route.features[0].geometry.coordinates[counter >= steps ? counter : counter + 1])
-        );
+        );*/
 
         // Update the source with this new data.
         this.mapbox.getSource('point').setData(busPoint);
@@ -314,13 +325,23 @@ export default {
         this.renderRoutes();
       }, 500);
     }
+  },
+  watch: {
+    mapbox(newValue) {
+      if (newValue) {
+        this.routesToRender.forEach(route => {
+          this.renderRoute(route);
+        });
+        this.routesToRender = [];
+      }
+    }
   }
 };
 </script>
 
 <style>
 :root {
-  --popup-bg: blue;
+  --popup-bg: #1c3e94;
   --popup-color: white;
 }
 

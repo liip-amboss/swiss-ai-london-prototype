@@ -118,6 +118,7 @@ body {
   justify-content: center;
   align-items: center;
   cursor: pointer;
+  border: 0;
 }
 
 .start-bus span {
