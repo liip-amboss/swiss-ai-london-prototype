@@ -34,6 +34,8 @@ import Mapbox from 'mapbox-gl';
 import { MglMap, MglPopup, MglNavigationControl } from 'vue-mapbox';
 import { bearing, point } from '@turf/turf';
 
+import { mapState, mapMutations } from 'vuex';
+
 import PapaParse from 'papaparse';
 import axios from 'axios';
 import OSPoint from 'ospoint';
@@ -72,6 +74,7 @@ export default {
     MglPopup
   },
   computed: {
+    ...mapState(['actualRoute']),
     filteredStops() {
       return this.stops.filter(stop => stop.route === this.actualRoute);
     },
@@ -94,7 +97,6 @@ export default {
         'pk.eyJ1Ijoiam9uYXNuaWVzdHJvaiIsImEiOiJjazN6bmt3dHowandwM21wMzcwc21vdjdxIn0.P496caPNw9SXrMl_GbzHdw', // your access token. Needed if you using Mapbox maps
       mapStyle: 'mapbox://styles/jonasniestroj/ck40ytrxe0otp1cqqyri422ly', // your map style
       stops: [],
-      actualRoute: '9',
       actualBusRoute: null,
       restarted: false,
       routes: [],
@@ -201,11 +203,13 @@ export default {
         };
 
         this.routes.push(route);
+        this.$emit('routes', this.routes);
         this.renderRoute(route);
       }
     }
   },
   methods: {
+    ...mapMutations(['setActualRoute']),
     async onMapLoad(event) {
       this.mapbox = event.map;
 
@@ -403,11 +407,7 @@ export default {
           !features.some(feature => feature.source.startsWith('marker-'))
         ) {
           const routeNumber = feature.source.split('-')[1];
-          this.actualRoute = routeNumber;
-          this.removeMarkers();
-          setTimeout(() => {
-            this.renderMarkers();
-          }, 100);
+          this.setActualRoute(routeNumber);
         }
       });
     },
@@ -478,6 +478,12 @@ export default {
         });
         this.routesToRender = [];
       }
+    },
+    actualRoute() {
+      this.removeMarkers();
+      setTimeout(() => {
+        this.renderMarkers();
+      }, 100);
     }
   }
 };
