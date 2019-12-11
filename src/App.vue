@@ -2,7 +2,7 @@
   <div id="app">
     <div class="master">
       <header class="site-header">
-        <img src="transport-for-london.png" />
+        <img src="transport-for-london.svg" />
         <div>
           <div class="switch-poi">
             <span>Show the POIs</span>
@@ -69,8 +69,9 @@ export default {
 html {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  font-family: 'WorkSans', 'Avenir', Helvetica, Arial, sans-serif;
+  font-family: "Work Sans", sans-serif;
   color: #353535;
+  font-size: 14px;
 }
 
 body {
@@ -108,17 +109,19 @@ body {
 }
 
 .start-bus {
-  margin-top: 20px;
-  width: 200px;
-  padding-top: 0.75rem;
-  padding-bottom: 0.75rem;
-  border-radius: 18px;
-  background-color: #1c3e94;
   display: flex;
   justify-content: center;
   align-items: center;
-  cursor: pointer;
+  width: 100%;
+  margin-top: 1.5em;
+
+  padding: 0.75rem;
+  font-weight: bold;
   border: 0;
+  border-radius: 18px;
+  cursor: pointer;
+  background-color: #1c3e94;
+  color: white;
 }
 
 .start-bus:focus {
@@ -126,8 +129,7 @@ body {
 }
 
 .start-bus span {
-  font-size: 16px;
-  color: white;
-  padding-left: 5px;
+  padding-left: 0.5em;
+  font-size: 1rem;
 }
 </style>
