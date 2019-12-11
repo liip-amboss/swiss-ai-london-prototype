@@ -4,6 +4,7 @@
     :mapStyle="mapStyle"
     @load="onMapLoad"
     @click="onMapClick"
+    @mousemove="onMouseOver"
     :center="[-0.1, 51.5]"
     :zoom="9"
     :showZoom="true"
@@ -94,6 +95,8 @@ export default {
       mapStyle: 'mapbox://styles/jonasniestroj/ck40ytrxe0otp1cqqyri422ly', // your map style
       stops: [],
       actualRoute: '9',
+      actualBusRoute: null,
+      restarted: false,
       routes: [],
       routesToRender: [],
       activeStop: null,
@@ -276,6 +279,11 @@ export default {
       });
     },
     startBus() {
+      if (this.mapbox.getLayer('point')) {
+        this.mapbox.removeLayer('point');
+        this.mapbox.removeSource('point');
+        this.restarted = true;
+      }
       const startPoint = [];
 
       let routeNine;
@@ -337,6 +345,10 @@ export default {
 
       let counter = 0;
 
+      this.actualBusRoute = this.actualRoute;
+
+      const actualBusRoute = this.actualBusRoute;
+
       const animate = () => {
         busPoint.features[0].geometry.coordinates = route.features[0].geometry.coordinates[counter];
 
@@ -351,7 +363,11 @@ export default {
         // Request the next frame of animation so long the end has not been reached.
         if (counter < steps) {
           setTimeout(() => {
-            requestAnimationFrame(animate);
+            if (this.actualBusRoute === actualBusRoute && !this.restarted) {
+              animate();
+            } else if (this.restarted) {
+              this.restarted = false;
+            }
           }, 500);
         }
 
@@ -372,8 +388,8 @@ export default {
     },
     onMapClick(event) {
       const bbox = [
-        [event.mapboxEvent.point.x - 5, event.mapboxEvent.point.y - 5],
-        [event.mapboxEvent.point.x + 5, event.mapboxEvent.point.y + 5]
+        [event.mapboxEvent.point.x - 2, event.mapboxEvent.point.y - 2],
+        [event.mapboxEvent.point.x + 2, event.mapboxEvent.point.y + 2]
       ];
       const features = this.mapbox.queryRenderedFeatures(bbox);
       features.forEach(feature => {
@@ -435,6 +451,23 @@ export default {
     },
     onAdded(event) {
       this.popup = event.popup;
+    },
+    onMouseOver(event) {
+      const bbox = [
+        [event.mapboxEvent.point.x + 2, event.mapboxEvent.point.y - 2],
+        [event.mapboxEvent.point.x + 2, event.mapboxEvent.point.y + 2]
+      ];
+      const features = this.mapbox.queryRenderedFeatures(bbox);
+      const element = document.getElementsByClassName('mapboxgl-canvas')[0];
+      if (
+        features.some(
+          feature => feature.source.startsWith('marker-') || feature.source.startsWith('route-')
+        )
+      ) {
+        element.style.cursor = 'pointer';
+      } else {
+        element.style.cursor = 'grab';
+      }
     }
   },
   watch: {
