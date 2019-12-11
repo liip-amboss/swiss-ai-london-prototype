@@ -5,10 +5,12 @@
     @load="onMapLoad"
     :center="[-0.1, 51.5]"
     :zoom="9"
+    :showZoom="true"
   >
+    <MglNavigationControl :showCompass="false" position="top-left" />
     <MglMarker v-for="(stop, i) in stops" :coordinates="stop.location" color="blue" :key="i">
       <template slot="marker">
-        <img src="pin-bus.png" width="20" height="20" />
+        <img src="bus-stop-small.png" width="20" height="20" />
       </template>
       <MglPopup>
         <div class="mapbox-popup">
@@ -21,7 +23,7 @@
 
 <script>
 import Mapbox from 'mapbox-gl';
-import { MglMap, MglPopup, MglMarker } from 'vue-mapbox';
+import { MglMap, MglPopup, MglMarker, MglNavigationControl } from 'vue-mapbox';
 import { bearing, point } from '@turf/turf';
 
 import PapaParse from 'papaparse';
@@ -59,7 +61,8 @@ export default {
   components: {
     MglMap,
     MglPopup,
-    MglMarker
+    MglMarker,
+    MglNavigationControl
   },
   data() {
     return {
@@ -348,5 +351,19 @@ export default {
   background: transparent;
   font-size: 1.5rem;
   line-height: 1;
+}
+
+.mapboxgl-ctrl-group {
+  border-radius: 0px;
+}
+
+.mapboxgl-ctrl-zoom-in {
+  background-color: white;
+  background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAeCAQAAACROWYpAAAABGdBTUEAALGPC/xhBQAAACBjSFJNAAB6JgAAgIQAAPoAAACA6AAAdTAAAOpgAAA6mAAAF3CculE8AAAAAmJLR0QA/4ePzL8AAAAHdElNRQfjDAsEKxwrjaB2AAABNklEQVQ4y82Vv07CUBTGf19p6ggL7CQmdTImvAYrM2HyJXT3FZwaZzbTpyAhMjhAYsJKYGlHG8txqeVPtHhrSPzWc3/3+3p67r2KHuhzZYaTJObEPn2NbcbWDcbTjQ18Qnt5f75FDqTxyIVx5xlmgRMKIsDM8BzjHsj/qfAEoC0YjFxhoEUILEicnQ2a9IBVPTigAwQ1vvlrhyr9qdvn+VWAkVdHL+EIoEWzbNAHXdpAlzwqVilTSgLDb5xFSI9O4ZXTtmsQbGgU9TVTJrssJewVSasafFz1D2oLVnuxLwUQ81auykj3+RIeAiS7aYqgwQZYsqwz26IBVaf1fw4Jpy6YKjhjLcjqwSlTQVoPTpjwu9k+1gjOfJ6FlJ2yOJKRIQlFrxrbzByfGxXPTWwD7h2tQTYn/gR+iWG919pECAAAACV0RVh0ZGF0ZTpjcmVhdGUAMjAxOS0xMi0xMVQwNDo0MzoyOC0wNTowMOcVgkgAAAAldEVYdGRhdGU6bW9kaWZ5ADIwMTktMTItMTFUMDQ6NDM6MjgtMDU6MDCWSDr0AAAAAElFTkSuQmCC');
+}
+
+.mapboxgl-ctrl-zoom-out {
+  border-top: 0px !important;
+  background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAeCAQAAACROWYpAAAABGdBTUEAALGPC/xhBQAAACBjSFJNAAB6JgAAgIQAAPoAAACA6AAAdTAAAOpgAAA6mAAAF3CculE8AAAAAmJLR0QA/4ePzL8AAAAHdElNRQfjDAsELDK4Gjt+AAAAxUlEQVQ4y+3VMWoCQRjF8f9blk2plVdYS8FrbOsBrLyE9l7Bag+wXdhTBCRbWOgNQqpNmS18NookqOEDCYQ41cDMj+/BMDyVSwqGNqElsaVOKVS5YR/DJBp5kpL79fN5hgLSrHgy88TYWYiCyLBNEoz7NfsD/wucnjYlQJ8e2Y3bHR+0MP2OAZEzZsC1HybeWfNyPr9PbMDsePsxti/gKUBLG5n8R9/5gX8VC6kj1jamQxIqN6rcOFg3OtZN7QmL4GiQt9QHoxI6Q4U6jWsAAAAldEVYdGRhdGU6Y3JlYXRlADIwMTktMTItMTFUMDQ6NDQ6NTAtMDU6MDA8495PAAAAJXRFWHRkYXRlOm1vZGlmeQAyMDE5LTEyLTExVDA0OjQ0OjUwLTA1OjAwTb5m8wAAAABJRU5ErkJggg==');
 }
 </style>
