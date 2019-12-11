@@ -247,7 +247,7 @@ export default {
       let routeNine;
 
       this.routes.forEach(route => {
-        if (route.route === '9') {
+        if (route.route === this.actualRoute) {
           routeNine = route;
           startPoint.push(route.coordinates[0].longitude);
           startPoint.push(route.coordinates[0].latitude);
