@@ -13,7 +13,7 @@
     "axios": "^0.19.0",
     "core-js": "^3.4.3",
     "file-loader": "^5.0.2",
-    "lodash": "^4.17.15",
+    "lodash": "^4.17.19",
     "mapbox-gl": "^1.6.0",
     "ospoint": "^0.2.1",
     "papaparse": "^5.1.0",
