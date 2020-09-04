@@ -16,7 +16,7 @@
     "lodash": "^4.17.15",
     "mapbox-gl": "^1.6.0",
     "ospoint": "^0.2.1",
-    "papaparse": "^5.1.0",
+    "papaparse": "^5.2.0",
     "query-string": "^6.9.0",
     "vue": "^2.6.10",
     "vue-mapbox": "^0.4.1",
